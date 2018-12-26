@@ -12,8 +12,8 @@
 {{wtf.quick_form(form)}}
 
 
-<p>The local time is {{moment(current_time).format('LLL')}}.</p>
-<p>That was {{moment(current_time).fromNow(refresh=True)}}</p>
+<p>The local time is {{ moment(current_time).format('LLL') }}.</p>
+<p>That was {{ moment(current_time).fromNow(refresh=True) }}</p>
 
 {% endblock %}
 
