@@ -2,7 +2,7 @@ from flask import render_template,redirect,session,url_for,current_app
 
 from datetime import datetime
 
-from .main import main 
+from . import main 
 from .. import db
 from ..models import User
 from ..emaid import send_email
