@@ -19,7 +19,7 @@ def index():
             session['known']=False
             db.session.commit()
             if current_app.config['FLASKY_ADMIN']:
-                send_email(app.config['FLASKY_ADMIN'],'New User','mail/new_user',user=user)
+                send_email(current_app.config['FLASKY_ADMIN'],'New User','mail/new_user',user=user)
         else:
             session['known']=True
         session['name']=form.name.data
