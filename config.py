@@ -6,7 +6,7 @@ class Config:
     SECRET_KEY=os.environ.get("SECRET_KEY")or"hard to guess for you"
     SEQALCHEMY_COMMIT_ON_TEARDOWN=True
     FLASKY_MAIL_SUBJECT_PREFIX='[Flasky]'
-    FLASKY_MAIL_SENDER='Flasky Admin <flasky@example.com'
+    FLASKY_MAIL_SENDER='1207666489@qq.com'
     FLASKY_ADMIN=os.environ.get("FLASKY_ADMIN")
 
     @staticmethod
