@@ -8,7 +8,8 @@ class Config:
     FLASKY_MAIL_SUBJECT_PREFIX='[Flasky]'
     FLASKY_MAIL_SENDER='1207666489@qq.com'
     FLASKY_ADMIN=os.environ.get("FLASKY_ADMIN")
-
+    SQLALCHEMY_TRACK_MODIFICATIONS = True
+    SQLALCHEMY_COMMIT_TEARDOWN = True
     @staticmethod
     def init_app(app):
         pass
