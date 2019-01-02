@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% import  "bootstrap/wtf.html" as wtf %}
+{% import "_macros.html" as macros %}
 {% block title %}Index{% endblock %}
 {% block head %}
 	{{super()}}
@@ -12,13 +13,16 @@
 <div>
 	{% if current_user.can(Permission.WRITE_ARTICLES) %}
 	{{ wtf.quick_form(form) }}
+
+
+		{% include '_post.html' %}
+		<div class='pagination'>
+		{{ macros.pagination_widget(pagination,'.index')}}
+		</div>
+
+
 	{% endif %}
 </div>
-
-{% include '_post.html' %}
-
-
-
 <p>The local time is {{ moment(current_time).format('LLL') }}.</p>
 <p>That was {{ moment(current_time).fromNow(refresh=True) }}</p>
 

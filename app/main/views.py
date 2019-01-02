@@ -8,7 +8,7 @@ from ..models import User,Role,Post,Permission
 from ..emails import send_email
 from .forms import NameForm,EditProfileForm,EditProfileAdminForm,PostForm
 
-from flask import abort
+from flask import abort,request
 from flask_login import login_required,flash
 from  flask_login import current_user
 from ..decorates import admin_required
@@ -21,8 +21,11 @@ def index():
         db.session.add(post)
         db.session.commit()
         return redirect(url_for('.index'))
-    posts=Post.query.order_by(Post.timestamp.desc()).all()
-    return render_template('index.html',form=form,posts=posts,current_time=datetime.utcnow())
+   # posts=Post.query.order_by(Post.timestamp.desc()).all()
+    page=request.args.get('page',1,type=int)
+    pagination=Post.query.order_by(Post.timestamp.desc()).paginate(page,per_page=current_app.config['FLASKY_POSTS_PER_PAGE'],error_out=False)
+    posts=pagination.items
+    return render_template('index.html',form=form,posts=posts,current_time=datetime.utcnow(),pagination=pagination)
 
 
 @main.route('/user/<username>')
