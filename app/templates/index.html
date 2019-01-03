@@ -27,4 +27,7 @@
 <p>That was {{ moment(current_time).fromNow(refresh=True) }}</p>
 
 {% endblock %}
-
+{% block scripts %}
+{{ super() }}
+{{ pagedown.include_pagedown()}}
+{% endblock %}
