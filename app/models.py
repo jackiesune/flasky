@@ -5,12 +5,13 @@ from flask_login import UserMixin,AnonymousUserMixin
 
 from . import login_manager
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
-from flask import current_app
+from flask import current_app,url_for
 from datetime import datetime
 import hashlib
 from flask import request
 from markdown import markdown
 import bleach
+from app.exceptions import ValidationError
 
 
 @login_manager.user_loader
@@ -101,6 +102,39 @@ class User(UserMixin,db.Model):
     followed=db.relationship('Follow',foreign_keys=[Follow.follower_id],backref=db.backref('follower',lazy='joined'),lazy='dynamic',cascade='all,delete-orphan')
     followers=db.relationship('Follow',foreign_keys=[Follow.followed_id],backref=db.backref('followed',lazy='joined'),lazy='dynamic',cascade='all,delete-orphan')
     comments=db.relationship('Comment',backref='author',lazy='dynamic')
+
+    def to_json(self):
+        json_user={
+            'url':url_for('api.get_post',id=self.id,_external=True),
+            'username':self.username,
+            'member_since':self.member_since,
+            'last_seen':self.last_seen,
+            'posts':url_for('api.get_user_posts',id=self.id,_external=True),
+            'followed_posts':url_for('api.get_user_followed_posts',id=self.id,_external=True),
+            'post_count':self.posts.count()
+        }
+        return json_user
+
+    
+    
+    
+    
+    
+    
+    
+    def generate_auth_token(self,expiration):
+        s=Serializer(current_app.config['SECRET_KEY'],expires_in=expiration)
+        return s.dumps({'id':self.id})
+
+    @staticmethod
+    def verify_auth_token(token):
+        s=Serializer(current_app.config['SECRET_KEY'])
+        try:
+            data=s.loads(token)
+        except:
+            return None
+        return User.query.get(data['id'])
+
 
 
 
@@ -292,6 +326,29 @@ class Post(db.Model):
     timestamp=db.Column(db.DateTime,index=True,default=datetime.utcnow)
     body_html=db.Column(db.Text)
     comments=db.relationship('Comment',backref='post',lazy='dynamic')
+    
+    def to_json(self):
+        json_post={
+            'url':url_for('api.get_post',id=self.id,_external=True),
+            'body':self.body,
+            'body_html':self.body_html,
+            'timestamp':self.timestamp,
+            'author':url_for('api.get_user',id=self.author.id,_external=True),
+            'comments':url_for('api.get_post_comments',id=self.id,_external=True),
+            'comment_count':self.comments.count()
+        }
+        return json_post
+
+    @staticmethod
+    def from_json(json_post):
+        body=json_post.get('body')
+        if body is None or body =="":
+            raise ValidationError('post does not have a body')
+        return Post(body=body)
+
+
+
+
 
     @staticmethod
     def generate_fake(count=100):
@@ -326,6 +383,25 @@ class Comment(db.Model):
     disabled=db.Column(db.Boolean)
     author_id=db.Column(db.Integer,db.ForeignKey('users.id'))
     post_id=db.Column(db.Integer,db.ForeignKey('posts.id'))
+    
+
+
+    def to_json(self):
+        json_comment = {
+            'url':url_for('api.get_comment', id=self.id),
+            'post_url': url_for('api.get_post', id=self.post_id),
+            'body': self.body,
+            'body_html': self.body_html,
+            'timestamp': self.timestamp,
+            'author_url': url_for('api.get_user', id=self.author_id),
+    }
+        return json_comment
+    @staticmethod
+    def from_json(json_comment):
+        body = json_comment.get('body')
+        if body is None or body == '':
+            raise ValidationError('comment does not have a body')
+        return Comment(body=body)
 
 
     @staticmethod
@@ -334,5 +410,3 @@ class Comment(db.Model):
         target.body_html=bleach.linkify(bleach.clean(markdown(value,output_format='html'),tags=allowed_tags,strip=True))
 
 db.event.listen(Comment.body,'set',Comment.on_changed_body)
-
-
