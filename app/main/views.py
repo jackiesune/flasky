@@ -13,6 +13,14 @@ from flask_login import login_required,flash
 from  flask_login import current_user
 from ..decorates import admin_required,permission_required
 
+
+
+
+
+
+
+
+
 @main.route('/',methods=['GET','POST'])
 def index():
 

@@ -105,7 +105,7 @@ class User(UserMixin,db.Model):
 
     def to_json(self):
         json_user={
-            'url':url_for('api.get_post',id=self.id,_external=True),
+            'url':url_for('api.get_user',id=self.id),
             'username':self.username,
             'member_since':self.member_since,
             'last_seen':self.last_seen,
@@ -232,14 +232,6 @@ class User(UserMixin,db.Model):
 
 
 
-    class AnonymousUser(AnonymousUserMixin):
-        def can(self,permissions):
-            return False
-
-        def is_administrator(self):
-            return False
-
-    login_manager.anonymous_user=AnonymousUser
 
 
 
@@ -310,6 +302,14 @@ class User(UserMixin,db.Model):
                 db.session.rollback()
 
 
+class AnonymousUser(AnonymousUserMixin):
+    def can(self,permissions):
+        return False
+
+    def is_administrator(self):
+        return False
+
+login_manager.anonymous_user=AnonymousUser
 
                     
 
