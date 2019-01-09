@@ -100,7 +100,13 @@ class User(UserMixin,db.Model):
     posts=db.relationship('Post',backref='author',lazy='dynamic')
     followed=db.relationship('Follow',foreign_keys=[Follow.follower_id],backref=db.backref('follower',lazy='joined'),lazy='dynamic',cascade='all,delete-orphan')
     followers=db.relationship('Follow',foreign_keys=[Follow.followed_id],backref=db.backref('followed',lazy='joined'),lazy='dynamic',cascade='all,delete-orphan')
-    
+    comments=db.relationship('Comment',backref='author',lazy='dynamic')
+
+
+
+    @property
+    def followed_posts(self):
+        return Post.query.join(Follow,Follow.followed_id==Post.author_id).filter(Follow.follower_id==self.id)
 
 
 
@@ -142,7 +148,9 @@ class User(UserMixin,db.Model):
                 self.role=Role.query.filter_by(default=True).first()
         if self.email is not None and self.avatar_hash is None:
             self.avatar_hash=hashlib.md5(self.email.encode('utf-8')).hexdigest()
-
+        self.follow(self)
+        db.session.add(self)
+        db.session.commit()
     def generate_email_change_token(self, new_email, expiration=3600):
         s = Serializer(current_app.config['SECRET_KEY'], expiration)
         return s.dumps(
@@ -194,7 +202,7 @@ class User(UserMixin,db.Model):
         def can(self,permissions):
             return False
 
-        def is_admin(self):
+        def is_administrator(self):
             return False
 
     login_manager.anonymous_user=AnonymousUser
@@ -283,7 +291,7 @@ class Post(db.Model):
     author_id=db.Column(db.Integer,db.ForeignKey('users.id'))
     timestamp=db.Column(db.DateTime,index=True,default=datetime.utcnow)
     body_html=db.Column(db.Text)
-
+    comments=db.relationship('Comment',backref='post',lazy='dynamic')
 
     @staticmethod
     def generate_fake(count=100):
@@ -308,5 +316,23 @@ class Post(db.Model):
 db.event.listen(Post.body,'set',Post.on_changed_body)
 
 
+
+class Comment(db.Model):
+    __tablename__='comments'
+    id=db.Column(db.Integer,primary_key=True)
+    body=db.Column(db.Text)
+    body_html=db.Column(db.Text)
+    timestamp=db.Column(db.DateTime,index=True,default=datetime.utcnow)
+    disabled=db.Column(db.Boolean)
+    author_id=db.Column(db.Integer,db.ForeignKey('users.id'))
+    post_id=db.Column(db.Integer,db.ForeignKey('posts.id'))
+
+
+    @staticmethod
+    def on_changed_body(target,value,oldvalue,initiator):
+        allowed_tags=['a','abbr','acronym','b','code','em','i','strong']
+        target.body_html=bleach.linkify(bleach.clean(markdown(value,output_format='html'),tags=allowed_tags,strip=True))
+
+db.event.listen(Comment.body,'set',Comment.on_changed_body)
 
 
