@@ -15,6 +15,8 @@ class Config:
     FLASKY_FOLLOWED_PER_PAGE=20
     FLASKY_FOLLOWED_PER_PAGE=20
     FLASKY_FOLLOWERS_PER_PAGE=20
+    FLASKY_SLOW_DB_QUERY_TIME=0.5
+    SQLALCHEMY_RECORD_QUERIES=True
     @staticmethod
     def init_app(app):
         pass
